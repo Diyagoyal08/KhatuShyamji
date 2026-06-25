@@ -1,9 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Icon, Pill } from "@/components/shared"
+import { Icon } from "@/components/shared"
 import type { ScreenKey } from "@/lib/data"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"]
 const MONTHS = [
@@ -11,8 +13,9 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ]
 
-// demo: a few fully-booked dates in the shown month
 const BOOKED = [7, 14, 22]
+
+type BookingType = "solo" | "group" | null
 
 export function BookDarshanScreen({
   navigate,
@@ -21,9 +24,12 @@ export function BookDarshanScreen({
   navigate: (s: ScreenKey) => void
   navigateWithDate: (s: ScreenKey, date: string) => void
 }) {
+  const { t } = useLanguage()
+  const [bookingType, setBookingType] = useState<BookingType>(null)
   const [month, setMonth] = useState(5) // June (0-indexed)
   const year = 2026
   const [selected, setSelected] = useState<number | null>(28)
+  const [devoteesCount, setDevoteesCount] = useState<number>(1)
 
   const days = useMemo(() => {
     const first = new Date(year, month, 1).getDay()
@@ -36,145 +42,252 @@ export function BookDarshanScreen({
   const today = 23
 
   const handleContinue = () => {
-    if (selected) {
-      const dateStr = `${selected} ${MONTHS[month]} ${year}`
-      navigateWithDate("passenger-details", dateStr)
+    if (bookingType === "group") {
+      navigate("group-booking")
+      return
     }
+    if (!selected) return
+    const dateStr = `${selected} ${MONTHS[month]} ${year}`
+    localStorage.setItem("booking_devotees_count", String(devoteesCount))
+    navigateWithDate("passenger-details", dateStr)
   }
 
+  const isContinueDisabled =
+    !bookingType ||
+    (bookingType === "solo" && !selected)
+
   return (
-    <div className="space-y-5">
-      {/* Page title */}
-      <div className="text-center">
-        <h2 className="font-heading text-xl font-bold text-foreground">Select Darshan Date</h2>
-        <p className="text-sm text-muted-foreground">दर्शन की तारीख चुनें</p>
+    <div className="space-y-6 pb-36 md:pb-8">
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A120B] to-[#0A0A1A] p-8 text-center shadow-lg">
+        <div className="absolute inset-0 bg-[url('/images/mandala-pattern.png')] bg-cover opacity-10" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#D97706]/20 to-transparent blur-2xl" />
+        <div className="relative z-10">
+          <div className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/30 text-[#D4AF37]">
+            <Icon name="CalendarCheck" className="size-6" />
+          </div>
+          <h2 className="font-heading text-2xl font-bold tracking-wide text-[#D4AF37]">{t("Book Your Darshan", "दर्शन बुक करें")}</h2>
+          <p className="mt-1 text-sm text-white/70 uppercase tracking-wider">{t("Plan your sacred visit", "अपनी पवित्र यात्रा की योजना बनाएं")}</p>
+        </div>
       </div>
 
-      {/* Calendar card */}
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
+      {/* Step 0: Booking Type Selection */}
+      <section className="rounded-3xl border border-[#D4AF37]/30 bg-white p-6 shadow-md relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FFF8F0] to-transparent pointer-events-none" />
+
+        <div className="relative z-10 mb-5">
+          <span className="inline-block rounded-full bg-[#D97706]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#D97706] mb-2">Step 1</span>
+          <h3 className="font-heading text-xl font-bold text-[#1A120B]">
+            {t("Select Booking Type", "बुकिंग प्रकार चुनें")}
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 relative z-10">
+          {/* Solo / Family */}
           <button
-            onClick={() => setMonth((m) => Math.max(5, m - 1))}
-            className="grid size-9 place-items-center rounded-xl bg-[#FFF3E0] text-[#FF8C00] disabled:opacity-40 transition hover:bg-[#FFE0B2]"
-            disabled={month <= 5}
-            aria-label="Previous month"
-          >
-            <Icon name="ChevronLeft" className="size-5" />
-          </button>
-          <p className="font-heading text-base font-bold text-foreground">
-            {MONTHS[month]} {year}
-          </p>
-          <button
-            onClick={() => setMonth((m) => Math.min(7, m + 1))}
-            className="grid size-9 place-items-center rounded-xl bg-[#FFF3E0] text-[#FF8C00] disabled:opacity-40 transition hover:bg-[#FFE0B2]"
-            disabled={month >= 7}
-            aria-label="Next month"
-          >
-            <Icon name="ChevronRight" className="size-5" />
-          </button>
-        </div>
-
-        <div className="mb-2 grid grid-cols-7 text-center">
-          {WEEKDAYS.map((d, i) => (
-            <span key={i} className="text-xs font-semibold text-muted-foreground">
-              {d}
-            </span>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-1.5">
-          {days.map((d, i) => {
-            if (d === null) return <span key={i} />
-            const isPast = d < today
-            const isBooked = BOOKED.includes(d)
-            const disabled = isPast || isBooked
-            const isSel = selected === d
-            return (
-              <button
-                key={i}
-                disabled={disabled}
-                onClick={() => setSelected(d)}
-                className={cn(
-                  "relative grid aspect-square place-items-center rounded-xl text-sm font-semibold transition",
-                  isSel && "bg-gradient-to-r from-[#FF8C00] to-[#FFA726] text-white shadow-md",
-                  !isSel && !disabled && "bg-[#FFF3E0] text-[#a85a14] hover:bg-[#FFE0B2]",
-                  isBooked && "bg-secondary text-muted-foreground line-through",
-                  isPast && !isBooked && "text-muted-foreground/40",
-                )}
-              >
-                {d}
-                {d === today && !isSel ? (
-                  <span className="absolute bottom-1 size-1 rounded-full bg-[#FF8C00]" />
-                ) : null}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3 text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="size-3 rounded bg-[#FFF3E0]" /> Available
-          </span>
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="size-3 rounded bg-[#FF8C00]" /> Selected
-          </span>
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="size-3 rounded bg-secondary" /> Fully booked
-          </span>
-        </div>
-      </section>
-
-      {/* Status for selected date */}
-      <section className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Darshan", value: "Open", icon: "DoorOpen", tone: "success" as const },
-          { label: "Crowd", value: "Moderate", icon: "Users", tone: "warning" as const },
-          { label: "Wait", value: "~35 min", icon: "Clock", tone: "warning" as const },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-border bg-card p-3 text-center shadow-sm">
-            <span
-              className={cn(
-                "mx-auto grid size-9 place-items-center rounded-xl",
-                s.tone === "success" ? "bg-[#e7f3ea] text-success" : "bg-[#FFF3E0] text-[#FF8C00]",
-              )}
-            >
-              <Icon name={s.icon} className="size-5" />
-            </span>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">{s.label}</p>
-            <p className="font-heading text-sm font-bold text-foreground">{s.value}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Temple notice */}
-      <section className="flex items-start gap-3 rounded-2xl border border-[#FFE0B2] bg-[#FFF8E7] p-4">
-        <Icon name="Info" className="mt-0.5 size-5 shrink-0 text-[#FF8C00]" />
-        <p className="text-sm leading-relaxed text-[#8a5a22]">
-          Carry a valid ID proof for all visitors. Mobile phones and large bags are not allowed inside
-          the sanctum. <span className="font-semibold">Darshan is free of charge.</span>
-        </p>
-      </section>
-
-      {/* Sticky continue */}
-      <div className="fixed inset-x-0 bottom-[68px] z-20 mx-auto w-full md:max-w-[480px] border-t border-border bg-card/95 px-4 py-3 backdrop-blur">
-        <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            {selected ? (
-              <>
-                Selected: <span className="font-semibold text-foreground">{selected} {MONTHS[month]}</span>
-              </>
-            ) : (
-              "Please select a date"
+            onClick={() => { setBookingType("solo"); }}
+            className={cn(
+              "group relative flex flex-col items-start gap-3 overflow-hidden rounded-2xl border-2 p-5 text-left transition-all duration-200",
+              bookingType === "solo"
+                ? "border-[#D97706] bg-gradient-to-br from-[#FFF8F0] to-[#FFF3E0] shadow-md"
+                : "border-[#E8D5B7] bg-white hover:border-[#D4AF37]/60 hover:bg-[#FFF8F0]"
             )}
-          </span>
+          >
+            {bookingType === "solo" && (
+              <span className="absolute top-3 right-3 grid size-6 place-items-center rounded-full bg-[#D97706] text-white">
+                <Icon name="Check" className="size-3.5" />
+              </span>
+            )}
+            <span className={cn(
+              "grid size-12 place-items-center rounded-2xl transition-all",
+              bookingType === "solo"
+                ? "bg-gradient-to-br from-[#D97706] to-[#D4AF37] text-white shadow-md"
+                : "bg-[#FFF3E0] text-[#D97706]"
+            )}>
+              <Icon name="Users" className="size-6" />
+            </span>
+            <div>
+              <p className="font-heading text-base font-bold text-[#1A120B]">{t("Solo / Family", "एकल / परिवार")}</p>
+              <p className="text-xs text-[#6b5440] mt-0.5 leading-relaxed">{t("Up to 6 members · Standard QR Pass", "6 सदस्य तक · मानक क्यूआर पास")}</p>
+            </div>
+          </button>
+
+          {/* Group Booking */}
+          <button
+            onClick={() => setBookingType("group")}
+            className={cn(
+              "group relative flex flex-col items-start gap-3 overflow-hidden rounded-2xl border-2 p-5 text-left transition-all duration-200",
+              bookingType === "group"
+                ? "border-[#D97706] bg-gradient-to-br from-[#FFF8F0] to-[#FFF3E0] shadow-md"
+                : "border-[#E8D5B7] bg-white hover:border-[#D4AF37]/60 hover:bg-[#FFF8F0]"
+            )}
+          >
+            {bookingType === "group" && (
+              <span className="absolute top-3 right-3 grid size-6 place-items-center rounded-full bg-[#D97706] text-white">
+                <Icon name="Check" className="size-3.5" />
+              </span>
+            )}
+            <span className={cn(
+              "grid size-12 place-items-center rounded-2xl transition-all",
+              bookingType === "group"
+                ? "bg-gradient-to-br from-[#D97706] to-[#D4AF37] text-white shadow-md"
+                : "bg-[#FFF3E0] text-[#D97706]"
+            )}>
+              <Icon name="UserPlus" className="size-6" />
+            </span>
+            <div>
+              <p className="font-heading text-base font-bold text-[#1A120B]">{t("Group Booking", "समूह बुकिंग")}</p>
+              <p className="text-xs text-[#6b5440] mt-0.5 leading-relaxed">{t("7+ members · Unified Group QR Pass", "7+ सदस्य · एकीकृत समूह क्यूआर पास")}</p>
+            </div>
+          </button>
         </div>
+      </section>
+
+      {/* For Group: show proceed immediately */}
+      <AnimatePresence>
+        {bookingType === "group" && (
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="rounded-3xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#8B1E1E]/10 to-transparent p-5 shadow-sm"
+          >
+            <div className="flex items-center gap-2.5 text-[#8B1E1E] font-bold text-sm mb-2">
+              <Icon name="Info" className="size-4" />
+              <span>{t("Group Booking Selected", "समूह बुकिंग चुनी गई")}</span>
+            </div>
+            <p className="text-xs text-[#6b5440] leading-relaxed">
+              {t("For 7+ devotees, a unified Group QR Pass is issued. You'll fill group details on the next screen.", "7+ श्रद्धालुओं के लिए एकीकृत समूह क्यूआर पास जारी होगा। अगली स्क्रीन पर समूह विवरण भरें।")}
+            </p>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* For Solo/Family: show devotees count + calendar */}
+      <AnimatePresence>
+        {bookingType === "solo" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            {/* Step 2: Devotees Count */}
+            <section className="rounded-3xl border border-[#D4AF37]/30 bg-white p-6 shadow-md relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FFF8F0] to-transparent pointer-events-none" />
+              <div className="relative z-10 mb-4">
+                <span className="inline-block rounded-full bg-[#D97706]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#D97706] mb-2">Step 2</span>
+                <h3 className="font-heading text-xl font-bold text-[#1A120B]">
+                  {t("How many devotees?", "कितने श्रद्धालु?")}
+                </h3>
+              </div>
+
+              <div className="flex items-center justify-center gap-6 py-4 relative z-10">
+                <button
+                  onClick={() => setDevoteesCount(Math.max(1, devoteesCount - 1))}
+                  className="grid size-12 place-items-center rounded-full bg-white border border-[#E8D5B7] text-[#D97706] shadow-sm transition hover:border-[#D4AF37] active:scale-95"
+                >
+                  <Icon name="Minus" className="size-5" />
+                </button>
+                <div className="w-20 text-center">
+                  <span className="font-heading text-4xl font-extrabold text-[#D97706]">{devoteesCount}</span>
+                </div>
+                <button
+                  onClick={() => setDevoteesCount(Math.min(6, devoteesCount + 1))}
+                  className="grid size-12 place-items-center rounded-full bg-white border border-[#E8D5B7] text-[#D97706] shadow-sm transition hover:border-[#D4AF37] active:scale-95"
+                >
+                  <Icon name="Plus" className="size-5" />
+                </button>
+              </div>
+              <p className="text-center text-xs text-[#6b5440] font-semibold">
+                {t("Standard Booking Pass (Up to 6 devotees)", "मानक बुकिंग पास (6 श्रद्धालुओं तक)")}
+              </p>
+            </section>
+
+            {/* Step 3: Calendar */}
+            <motion.section
+              className="rounded-3xl border border-[#D4AF37]/30 bg-white p-6 shadow-md relative overflow-hidden"
+            >
+              <div className="relative z-10 mb-6 flex items-center justify-between">
+                <div>
+                  <span className="inline-block rounded-full bg-[#D97706]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#D97706] mb-2">Step 3</span>
+                  <h3 className="font-heading text-xl font-bold text-[#1A120B]">
+                    {t("Select Date", "तारीख चुनें")}
+                  </h3>
+                </div>
+                {/* Month controls */}
+                <div className="flex items-center gap-3 rounded-full border border-[#E8D5B7] bg-[#FFF8F0] px-3 py-1.5 shadow-inner">
+                  <button
+                    onClick={() => setMonth((m) => Math.max(5, m - 1))}
+                    className="grid size-8 place-items-center rounded-full text-[#D97706] transition hover:bg-white disabled:opacity-30"
+                    disabled={month <= 5}
+                  >
+                    <Icon name="ChevronLeft" className="size-4" />
+                  </button>
+                  <span className="font-heading text-sm font-bold text-[#1A120B] w-24 text-center">
+                    {MONTHS[month]} {year}
+                  </span>
+                  <button
+                    onClick={() => setMonth((m) => Math.min(7, m + 1))}
+                    className="grid size-8 place-items-center rounded-full text-[#D97706] transition hover:bg-white disabled:opacity-30"
+                    disabled={month >= 7}
+                  >
+                    <Icon name="ChevronRight" className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-7 text-center mb-4 border-b border-[#E8D5B7] pb-2">
+                {WEEKDAYS.map((d, i) => (
+                  <span key={i} className="text-[10px] font-bold text-[#6b5440] uppercase">
+                    {d}
+                  </span>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-2">
+                {days.map((d, i) => {
+                  if (d === null) return <span key={i} />
+                  const isPast = d < today
+                  const isBooked = BOOKED.includes(d)
+                  const disabled = isPast || isBooked
+                  const isSel = selected === d
+                  return (
+                    <button
+                      key={i}
+                      disabled={disabled}
+                      onClick={() => setSelected(d)}
+                      className={cn(
+                        "relative grid aspect-square place-items-center rounded-xl font-heading text-base font-bold transition-all duration-200",
+                        isSel && "bg-gradient-to-br from-[#D97706] to-[#D4AF37] text-white shadow-[0_4px_15px_rgba(212,175,55,0.4)] scale-110 z-10",
+                        !isSel && !disabled && "bg-transparent text-[#1A120B] border border-transparent hover:border-[#D4AF37]/40 hover:bg-[#FFF8F0]",
+                        isBooked && "text-[#6b5440]/40 line-through decoration-[#8B1E1E]/30",
+                        isPast && !isBooked && "text-[#6b5440]/30",
+                      )}
+                    >
+                      {d}
+                      {d === today && !isSel && (
+                        <span className="absolute bottom-1.5 size-1 rounded-full bg-[#D4AF37]" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Action Bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-white border-t border-[#E8D5B7] p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe md:static md:bg-transparent md:border-0 md:p-0 md:shadow-none">
         <button
-          disabled={!selected}
+          disabled={isContinueDisabled}
           onClick={handleContinue}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF8C00] to-[#FFA726] py-3.5 font-heading text-base font-bold text-white shadow-lg shadow-[#FF8C00]/20 transition active:scale-[0.99] disabled:opacity-50 hover:shadow-xl"
+          className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#1A120B] to-[#2A1D13] py-4 text-base font-bold text-[#D4AF37] shadow-xl transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Continue
+          <span className="absolute inset-0 bg-white/5 opacity-0 transition group-hover:opacity-100" />
+          {bookingType === "group"
+            ? t("Proceed to Group Booking", "समूह बुकिंग पर जाएं")
+            : t("Confirm & Proceed", "पुष्टि करें और आगे बढ़ें")}
           <Icon name="ArrowRight" className="size-5" />
         </button>
       </div>

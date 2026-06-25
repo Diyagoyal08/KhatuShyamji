@@ -1,18 +1,32 @@
 export type ScreenKey =
+  | "welcome"
+  | "login"
+  | "signup"
+  | "otp"
   | "home"
   | "book"
   | "passenger-details"
+  | "group-booking"
+  | "booking-success"
   | "services"
   | "bookings"
   | "qr"
   | "crowd"
   | "traffic"
+  | "parking"
+  | "lost-found"
   | "reach"
   | "offline"
   | "temple"
   | "emergency"
   | "notifications"
+  | "announcements"
   | "profile"
+  | "shyam-ai"
+  | "khatu-path"
+  | "live-darshan"
+  | "virtual-darshan"
+  | "help-support"
 
 export const user = {
   name: "Mohan Sharma",
@@ -44,30 +58,43 @@ export const liveStatus = {
 }
 
 export const services = [
-  { key: "hotel", label: "Hotel Booking", hindi: "होटल", icon: "BedDouble", desc: "Stays near the temple", meta: "120+ options" },
-  { key: "transport", label: "Transport", hindi: "ट्रांसपोर्ट", icon: "CarFront", desc: "Cabs & private cars", meta: "24×7" },
-  { key: "restaurant", label: "Restaurant", hindi: "भोजन", icon: "UtensilsCrossed", desc: "Pure veg bhojan", meta: "Sattvik" },
-  { key: "bus", label: "Shyam Bus", hindi: "बस सेवा", icon: "BusFront", desc: "Shuttle to Khatu Dham", meta: "Every 15 min" },
-  { key: "prasad", label: "Prasad", hindi: "प्रसाद", icon: "ShoppingBag", desc: "Order blessed prasad", meta: "Home delivery" },
-  { key: "donation", label: "Donation", hindi: "दान", icon: "HandCoins", desc: "Support the seva", meta: "80G receipt" },
-  { key: "puja", label: "Puja Booking", hindi: "पूजा", icon: "Flame", desc: "Book a special puja", meta: "Daily slots" },
-  { key: "seva", label: "Seva Booking", hindi: "सेवा", icon: "HeartHandshake", desc: "Offer your seva", meta: "Volunteer" },
-  { key: "offerings", label: "Offerings", hindi: "अर्पण", icon: "Flower2", desc: "Flowers & chola", meta: "Fresh daily" },
-  { key: "group", label: "Group Booking", hindi: "समूह", icon: "Users", desc: "For 10+ devotees", meta: "Priority" },
+  { key: "live-darshan", label: "Live Darshan", hindi: "लाइव दर्शन", icon: "Video", desc: "Real-time shrine feed", meta: "Live", screenKey: "live-darshan" as const },
+  { key: "aarti", label: "Aarti Timings", hindi: "आरती दर्शन", icon: "Flame", desc: "Daily aarti timings", meta: "Timings", screenKey: "home" as const },
+  { key: "temple", label: "Temple Guide", hindi: "मंदिर विवरण", icon: "Landmark", desc: "Temple information", meta: "Guide", screenKey: "temple" as const },
+  { key: "hotel", label: "Hotel Booking", hindi: "होटल बुकिंग", icon: "BedDouble", desc: "Stays near Khatu Dham", meta: "120+ stays", screenKey: "services" as const },
+  { key: "transport", label: "Transport", hindi: "परिवहन", icon: "Bus", desc: "Buses, taxis & shared rides", meta: "Book now", screenKey: "reach" as const },
+  { key: "restaurant", label: "Restaurant", hindi: "भोजनालय", icon: "UtensilsCrossed", desc: "Pure veg dining options", meta: "50+ places", screenKey: "services" as const },
+  { key: "shyam-bus", label: "Shyam Bus", hindi: "श्याम बस", icon: "BusFront", desc: "Dedicated pilgrim buses", meta: "Daily", screenKey: "reach" as const },
+  { key: "prashad", label: "Prashad", hindi: "प्रसाद", icon: "ShoppingBag", desc: "Order sacred prasad", meta: "Fresh daily", screenKey: "services" as const },
+  { key: "donation", label: "Donation", hindi: "दान", icon: "HandCoins", desc: "Support the temple", meta: "Tax receipt", screenKey: "services" as const },
+  { key: "seva", label: "Seva Booking", hindi: "सेवा बुकिंग", icon: "Heart", desc: "Book special seva & puja", meta: "Book", screenKey: "services" as const },
+  { key: "offerings", label: "Offerings", hindi: "भेंट", icon: "Gift", desc: "Flowers, coconut & more", meta: "Counter 2", screenKey: "services" as const },
+  { key: "emergency", label: "Emergency Helpline", hindi: "आपातकालीन हेल्पलाइन", icon: "Siren", desc: "24/7 medical & police help", meta: "Dial 112", screenKey: "emergency" as const },
+  { key: "parking", label: "Parking Info", hindi: "पार्किंग जानकारी", icon: "SquareParking", desc: "Find spot availability", meta: "Live", screenKey: "parking" as const },
+  { key: "lost-found", label: "Lost and Found", hindi: "खोया और पाया", icon: "PackageSearch", desc: "Claim lost belongings", meta: "Desk", screenKey: "lost-found" as const },
+  { key: "traffic", label: "Traffic Updates", hindi: "ट्रैफिक अपडेट", icon: "TrafficCone", desc: "Live highway status", meta: "Live", screenKey: "traffic" as const },
+  { key: "notifications", label: "Announcements", hindi: "घोषणाएं", icon: "Bell", desc: "Temple notices & updates", meta: "Prayers", screenKey: "notifications" as const },
+  { key: "reach", label: "Pilgrim Assistance", hindi: "भक्त सहायता", icon: "MapPin", desc: "Dham travel guidelines", meta: "Help desk", screenKey: "reach" as const },
 ]
 
 export const drawerItems: { key: ScreenKey; label: string; hindi: string; icon: string }[] = [
   { key: "home", label: "Home", hindi: "होम", icon: "Home" },
   { key: "book", label: "Book Darshan", hindi: "दर्शन बुकिंग", icon: "CalendarCheck" },
+  { key: "live-darshan", label: "Live Darshan", hindi: "लाइव दर्शन", icon: "Video" },
+  { key: "virtual-darshan", label: "Virtual Darshan", hindi: "आभासी दर्शन", icon: "Compass" },
+  { key: "khatu-path", label: "Shyam Path", hindi: "श्याम पथ", icon: "Footprints" },
   { key: "bookings", label: "My Bookings", hindi: "मेरी बुकिंग", icon: "Ticket" },
   { key: "qr", label: "QR Pass", hindi: "क्यूआर पास", icon: "QrCode" },
+  { key: "services", label: "Services", hindi: "सेवाएं", icon: "LayoutGrid" },
   { key: "crowd", label: "Live Crowd Status", hindi: "भीड़ स्थिति", icon: "Users" },
   { key: "traffic", label: "Traffic Updates", hindi: "ट्रैफिक", icon: "TrafficCone" },
   { key: "reach", label: "How to Reach", hindi: "कैसे पहुंचें", icon: "MapPin" },
+  { key: "lost-found", label: "Lost & Found", hindi: "खोया और पाया", icon: "PackageSearch" },
   { key: "offline", label: "Offline Centers", hindi: "ऑफलाइन केंद्र", icon: "Building2" },
   { key: "temple", label: "Temple Information", hindi: "मंदिर जानकारी", icon: "Landmark" },
   { key: "emergency", label: "Emergency Help", hindi: "आपातकालीन", icon: "Siren" },
   { key: "notifications", label: "Notifications", hindi: "सूचनाएं", icon: "Bell" },
+  { key: "help-support", label: "Help & Support", hindi: "सहायता", icon: "CircleHelp" },
   { key: "profile", label: "Profile", hindi: "प्रोफ़ाइल", icon: "User" },
 ]
 

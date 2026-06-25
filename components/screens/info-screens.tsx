@@ -3,19 +3,28 @@
 import Image from "next/image"
 import { Icon, Pill, SectionTitle, StatusDot } from "@/components/shared"
 import { notifications, offlineCenters, type ScreenKey } from "@/lib/data"
+import { KhatuPathScreen } from "@/components/screens/khatu-path"
+import { LostFoundScreen } from "@/components/screens/lost-found"
+import { ParkingScreen } from "@/components/screens/parking"
+import { TrafficScreen as TrafficFullScreen } from "@/components/screens/traffic"
 
 export function InfoScreens({
   screen,
+  navigate,
 }: {
   screen: ScreenKey
   navigate: (s: ScreenKey) => void
 }) {
+  if (screen === "khatu-path") return <KhatuPathScreen navigate={navigate} />
+  if (screen === "lost-found") return <LostFoundScreen navigate={navigate} />
+  if (screen === "parking") return <ParkingScreen navigate={navigate} />
+  if (screen === "traffic") return <TrafficFullScreen navigate={navigate} />
   if (screen === "crowd") return <CrowdScreen />
-  if (screen === "traffic") return <TrafficScreen />
   if (screen === "offline") return <OfflineScreen />
   if (screen === "temple") return <TempleScreen />
   if (screen === "emergency") return <EmergencyScreen />
   if (screen === "notifications") return <NotificationsScreen />
+  if (screen === "announcements") return <NotificationsScreen />
   return null
 }
 

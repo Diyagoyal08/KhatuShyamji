@@ -1,31 +1,30 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Poppins, Mulish, Geist_Mono, Noto_Sans_Devanagari } from 'next/font/google'
+import { Cinzel, Inter, Noto_Serif_Devanagari } from 'next/font/google'
+import { LanguageProvider } from '@/lib/contexts/LanguageContext'
+import { AudioProvider } from '@/lib/contexts/AudioContext'
+import { ThemeProvider } from '@/lib/contexts/ThemeContext'
 import './globals.css'
 
-const devanagari = Noto_Sans_Devanagari({
+const devanagari = Noto_Serif_Devanagari({
   variable: '--font-devanagari',
   subsets: ['devanagari'],
   weight: ['400', '500', '600', '700'],
 })
 
-const poppins = Poppins({
-  variable: '--font-poppins',
-  subsets: ['latin', 'devanagari'],
+const cinzel = Cinzel({
+  variable: '--font-cinzel',
+  subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
 })
-const mulish = Mulish({
-  variable: '--font-mulish',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
 })
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
 
 export const metadata: Metadata = {
-  title: 'Khatu Shyam Ji · Smart Darshan',
+  title: 'Khatu Shyam Ji · Digital Darshan',
   description:
     'Book your darshan at Khatu Shyam Ji temple. Live crowd status, traffic updates, QR pass, hotels, transport and more. Jai Shree Shyam.',
   generator: 'v0.app',
@@ -33,7 +32,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#FF8C00',
+  themeColor: '#D97706',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -47,11 +46,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${mulish.variable} ${geistMono.variable} ${devanagari.variable}`}
+      className={`${cinzel.variable} ${inter.variable} ${devanagari.variable}`}
     >
-      <body className="bg-background font-sans antialiased">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+      <body suppressHydrationWarning className="bg-background font-sans antialiased text-foreground selection:bg-[#D4AF37] selection:text-[#1A120B]">
+        <ThemeProvider>
+          <LanguageProvider>
+            <AudioProvider>
+              {children}
+              {process.env.NODE_ENV === 'production' && <Analytics />}
+            </AudioProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

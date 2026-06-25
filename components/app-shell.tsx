@@ -1,48 +1,130 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Icon } from "@/components/shared"
-import { drawerItems, user, type ScreenKey } from "@/lib/data"
+import { motion } from "framer-motion"
+import { drawerItems, user as staticUser, type ScreenKey } from "@/lib/data"
+
+// Screen components
 import { HomeScreen } from "@/components/screens/home"
 import { BookDarshanScreen } from "@/components/screens/book-darshan"
 import { PassengerDetailsScreen } from "@/components/screens/passenger-details"
+import { GroupBookingScreen } from "@/components/screens/group-booking"
 import { ServicesScreen } from "@/components/screens/services"
 import { MyBookingsScreen } from "@/components/screens/my-bookings"
 import { QrPassScreen } from "@/components/screens/qr-pass"
 import { HowToReachScreen } from "@/components/screens/how-to-reach"
 import { ProfileScreen } from "@/components/screens/profile"
 import { InfoScreens } from "@/components/screens/info-screens"
+import { ShyamSahayakScreen } from "@/components/screens/shyam-sahayak"
+import { OpeningAnimation } from "@/components/features/opening-animation"
+import { BhatiMode } from "@/components/features/bhati-mode"
+import { VirtualDarshanScreen } from "@/components/screens/virtual-darshan"
+import { LiveDarshanScreen } from "@/components/screens/live-darshan"
+import { HelpSupportScreen } from "@/components/screens/help-support"
+
+// Auth screens
+import { WelcomeScreen } from "@/components/screens/auth/welcome"
+import { LoginScreen } from "@/components/screens/auth/login"
+import { SignupScreen } from "@/components/screens/auth/signup"
+import { OtpScreen } from "@/components/screens/auth/otp"
+import { BookingSuccessScreen } from "@/components/screens/booking-success"
+
+// Contexts
+import { useLanguage } from "@/lib/contexts/LanguageContext"
+import { useAudio } from "@/lib/contexts/AudioContext"
+import { useTheme } from "@/lib/contexts/ThemeContext"
 
 const titles: Record<ScreenKey, { en: string; hi: string }> = {
+  welcome: { en: "Welcome", hi: "स्वागत है" },
+  login: { en: "Login", hi: "लॉग इन करें" },
+  signup: { en: "Sign Up", hi: "पंजीकरण" },
+  otp: { en: "Verify OTP", hi: "ओटीपी सत्यापित करें" },
   home: { en: "Khatu Shyam Ji", hi: "खाटू श्याम जी" },
   book: { en: "Book Darshan", hi: "दर्शन बुकिंग" },
   "passenger-details": { en: "Passenger Details", hi: "यात्री विवरण" },
-  services: { en: "Services", hi: "सेवाएं" },
+  "group-booking": { en: "Group Booking", hi: "समूह बुकिंग" },
+  "booking-success": { en: "Booking Success", hi: "बुकिंग सफल" },
+  services: { en: "Services & Places", hi: "सेवाएं और स्थान" },
   bookings: { en: "My Bookings", hi: "मेरी बुकिंग" },
   qr: { en: "QR Pass", hi: "क्यूआर पास" },
   crowd: { en: "Live Crowd Status", hi: "भीड़ स्थिति" },
   traffic: { en: "Traffic Updates", hi: "ट्रैफिक अपडेट" },
+  parking: { en: "Parking Info", hi: "पार्किंग जानकारी" },
+  "lost-found": { en: "Lost & Found", hi: "खोया और पाया" },
   reach: { en: "How to Reach", hi: "कैसे पहुंचें" },
   offline: { en: "Offline Centers", hi: "ऑफलाइन केंद्र" },
   temple: { en: "Temple Information", hi: "मंदिर जानकारी" },
   emergency: { en: "Emergency Help", hi: "आपातकालीन सहायता" },
   notifications: { en: "Notifications", hi: "सूचनाएं" },
-  profile: { en: "Profile", hi: "प्रोफ़ाइल" },
+  announcements: { en: "Announcements", hi: "घोषणाएं" },
+  profile: { en: "My Profile", hi: "मेरी प्रोफ़ाइल" },
+  "shyam-ai": { en: "Shyam Sahayak AI", hi: "श्याम सहायक" },
+  "khatu-path": { en: "Shyam Path", hi: "श्याम पथ" },
+  "live-darshan": { en: "Live Darshan", hi: "लाइव दर्शन" },
+  "virtual-darshan": { en: "Virtual Darshan", hi: "आभासी दर्शन" },
+  "help-support": { en: "Help & Support", hi: "सहायता केंद्र" },
 }
 
-const bottomNav: { key: ScreenKey; label: string; icon: string }[] = [
-  { key: "home", label: "Home", icon: "Home" },
-  { key: "book", label: "Book", icon: "CalendarCheck" },
-  { key: "services", label: "Services", icon: "LayoutGrid" },
-  { key: "profile", label: "Profile", icon: "User" },
+const bottomNav: { key: ScreenKey; label: { en: string; hi: string }; icon: string }[] = [
+  { key: "home", label: { en: "Home", hi: "होम" }, icon: "Home" },
+  { key: "book", label: { en: "Darshan", hi: "दर्शन" }, icon: "CalendarCheck" },
+  { key: "services", label: { en: "Services", hi: "सेवाएं" }, icon: "LayoutGrid" },
+  { key: "shyam-ai", label: { en: "Shyam AI", hi: "श्याम एआई" }, icon: "Bot" },
+  { key: "profile", label: { en: "Profile", hi: "प्रोफ़ाइल" }, icon: "User" },
+]
+
+// Sidebar item groups
+const sidebarGroups = [
+  {
+    title: { en: "Main", hi: "मुख्य" },
+    items: ["home", "book", "live-darshan", "virtual-darshan", "khatu-path"],
+  },
+  {
+    title: { en: "My Account", hi: "मेरा खाता" },
+    items: ["bookings", "qr", "profile"],
+  },
+  {
+    title: { en: "Services", hi: "सेवाएं" },
+    items: ["services", "lost-found", "reach", "help-support"],
+  },
+  {
+    title: { en: "Temple & Info", hi: "मंदिर एवं जानकारी" },
+    items: ["crowd", "traffic", "parking", "offline", "temple", "emergency", "notifications"],
+  },
 ]
 
 export function AppShell() {
-  const [screen, setScreen] = useState<ScreenKey>("home")
+  const [screen, setScreen] = useState<ScreenKey>("welcome")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [bookingDate, setBookingDate] = useState<string | null>(null)
+  const [showOpening, setShowOpening] = useState(true)
+  const [currentUser, setCurrentUser] = useState<{ name: string; phone: string; initials: string } | null>(null)
+  const [notifCount] = useState(3) // mock unread notifications count
+
+  const { lang, setLang, t } = useLanguage()
+  const { bhatiMode, setBhatiMode, soundEnabled, setSoundEnabled, timeOfDay } = useAudio()
+  const { toggleTheme, isDark } = useTheme()
+
+  useEffect(() => {
+    // Check if user is logged in
+    const sessionUser = localStorage.getItem("current_user") || localStorage.getItem("temp_signup_user")
+    if (sessionUser) {
+      setCurrentUser(JSON.parse(sessionUser))
+      setScreen("home")
+    } else {
+      setScreen("welcome")
+    }
+
+    const hasSeen = sessionStorage.getItem("seen_opening")
+    if (hasSeen) {
+      setShowOpening(false)
+    } else {
+      sessionStorage.setItem("seen_opening", "true")
+    }
+  }, [])
 
   const navigate = (s: ScreenKey) => {
     setScreen(s)
@@ -56,214 +138,430 @@ export function AppShell() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0 })
   }
 
-  const isHome = screen === "home"
+  const handleProfileClick = () => {
+    if (currentUser) {
+      navigate("profile")
+    } else {
+      navigate("welcome")
+    }
+  }
 
-  return (
-    <div className="mx-auto flex min-h-screen w-full md:max-w-[480px] flex-col bg-background md:shadow-2xl">
-      {/* Header */}
-      <header
-        className="sticky top-0 z-30 overflow-hidden text-white"
+  const handleLogout = () => {
+    setCurrentUser(null)
+    localStorage.removeItem("current_user")
+    localStorage.removeItem("temp_signup_user")
+    navigate("welcome")
+  }
+
+  const activeUser = currentUser || staticUser
+
+  const isHome = screen === "home"
+  const isNightMode = timeOfDay === "night"
+
+  if (showOpening) {
+    return <OpeningAnimation onComplete={() => setShowOpening(false)} />
+  }
+
+  const SidebarContent = () => (
+    <>
+      <div
+        className="relative overflow-hidden px-5 pb-6 pt-6 text-white shrink-0"
         style={{
-          backgroundImage:
-            "linear-gradient(135deg, #FF8C00 0%, #FFA726 55%, #FFB74D 100%)",
+          backgroundImage: "linear-gradient(135deg, #D97706 0%, #D4AF37 100%)",
         }}
       >
         <div
-          className="absolute inset-0 opacity-[0.08]"
-          style={{
-            backgroundImage: "url(/images/mandala-pattern.png)",
-            backgroundSize: "260px",
-          }}
+          className="absolute inset-0 opacity-[0.2]"
+          style={{ backgroundImage: "url(/images/mandala-pattern.png)", backgroundSize: "220px" }}
           aria-hidden="true"
         />
-        <div className="relative flex items-center gap-3 px-4 pb-4 pt-5">
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/20 transition active:scale-95"
-            aria-label="Open menu"
-          >
-            <Icon name="Menu" className="size-5" />
-          </button>
+        <div className="relative flex items-center justify-between">
+          <span className="grid size-14 place-items-center rounded-full bg-white shadow-xl overflow-hidden p-1 border-2 border-[#D4AF37]">
+            <Image
+              src="/images/khatu-shyam-logo.png"
+              alt="Khatu Shyam Ji Logo"
+              width={48}
+              height={48}
+              className="size-full object-contain"
+            />
+          </span>
+          <div className="flex items-center gap-2">
+            {/* Theme toggle in sidebar */}
+            <button
+              onClick={toggleTheme}
+              className="grid size-9 place-items-center rounded-full bg-black/20 backdrop-blur-sm transition hover:bg-black/30"
+              aria-label={isDark ? "Switch to Light mode" : "Switch to Dark mode"}
+              title={isDark ? "Light Mode" : "Dark Mode"}
+            >
+              <Icon name={isDark ? "Sun" : "Moon"} className="size-4 text-white" />
+            </button>
+            <button
+              onClick={() => setDrawerOpen(false)}
+              className="md:hidden grid size-9 place-items-center rounded-full bg-black/20 backdrop-blur-sm transition-transform hover:scale-105"
+              aria-label="Close menu"
+            >
+              <Icon name="X" className="size-5 text-white" />
+            </button>
+          </div>
+        </div>
+        <p className="relative mt-4 font-heading text-lg font-bold tracking-widest text-[#FFF8F0] drop-shadow-md">
+          जय श्री श्याम · Khatu Dham
+        </p>
 
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white shadow-md overflow-hidden">
-              <Image
-                src="/images/khatu-shyam-logo.png"
-                alt="Khatu Shyam Ji Logo"
-                width={36}
-                height={36}
-                className="size-[36px] object-contain"
-              />
+        {/* Profile card */}
+        <div
+          className="relative mt-4 flex items-center gap-3 rounded-2xl bg-black/20 backdrop-blur-md p-3 border border-white/10 cursor-pointer hover:bg-black/30 transition"
+          onClick={handleProfileClick}
+        >
+          <span className="grid size-12 place-items-center rounded-full bg-white font-heading text-xl font-bold text-[#D97706] shadow-inner">
+            {activeUser.initials}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-heading font-bold text-white">{activeUser.name}</p>
+            <p className="truncate text-xs text-white/80">{activeUser.phone}</p>
+          </div>
+          {currentUser ? (
+            <Icon name="ChevronRight" className="size-4 text-white/70 shrink-0" />
+          ) : (
+            <span className="text-[10px] font-bold text-white/80 bg-white/20 rounded-full px-2 py-0.5 shrink-0">
+              {t("Login", "लॉगिन")}
             </span>
-            <div className="min-w-0">
-              <h1 className="truncate font-heading text-base font-bold leading-tight">
-                {titles[screen].en}
-              </h1>
-              <p className="truncate text-xs text-white/80">{titles[screen].hi}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Sidebar items grouped */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        {sidebarGroups.map((group) => {
+          const groupItems = drawerItems.filter((item) => group.items.includes(item.key))
+          if (groupItems.length === 0) return null
+          return (
+            <div key={group.title.en} className="mb-4">
+              <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {t(group.title.en, group.title.hi)}
+              </p>
+              <div className="space-y-0.5">
+                {groupItems.map((item) => {
+                  const active = screen === item.key
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => navigate(item.key)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-all duration-200",
+                        active ? "bg-[#D97706]/10 text-[#D97706]" : "text-foreground hover:bg-[#D97706]/5",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "grid size-9 place-items-center rounded-xl shadow-sm shrink-0",
+                          active ? "bg-gradient-to-br from-[#D97706] to-[#D4AF37] text-white" : "bg-card text-[#D97706] border border-border",
+                        )}
+                      >
+                        <Icon name={item.icon} className="size-4" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-[13px] font-bold leading-tight font-heading truncate">{item.label}</span>
+                        <span className="block text-[10px] text-muted-foreground mt-0.5 truncate">{item.hindi}</span>
+                      </span>
+                      {active && <span className="size-1.5 rounded-full bg-[#D97706] shrink-0" />}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-
-          <button
-            onClick={() => navigate("notifications")}
-            className="relative grid size-10 shrink-0 place-items-center rounded-xl bg-white/20 transition active:scale-95"
-            aria-label="Notifications"
-          >
-            <Icon name="Bell" className="size-5" />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-white ring-2 ring-[#FF8C00]" />
-          </button>
-        </div>
-
-        {isHome ? (
-          <div className="relative px-4 pb-3 text-center">
-            <p className="font-heading text-lg font-semibold tracking-wide text-white/90">
-              जय श्री श्याम
-            </p>
-          </div>
-        ) : null}
-      </header>
-
-      {/* Screen content */}
-      <main className="flex-1 px-4 pb-28 pt-4">
-        {screen === "home" && <HomeScreen navigate={navigate} />}
-        {screen === "book" && <BookDarshanScreen navigate={navigate} navigateWithDate={navigateWithDate} />}
-        {screen === "passenger-details" && <PassengerDetailsScreen navigate={navigate} bookingDate={bookingDate} />}
-        {screen === "services" && <ServicesScreen />}
-        {screen === "bookings" && <MyBookingsScreen navigate={navigate} />}
-        {screen === "qr" && <QrPassScreen />}
-        {screen === "reach" && <HowToReachScreen />}
-        {screen === "profile" && <ProfileScreen navigate={navigate} />}
-        {["crowd", "traffic", "offline", "temple", "emergency", "notifications"].includes(
-          screen,
-        ) && <InfoScreens screen={screen} navigate={navigate} />}
-      </main>
-
-      {/* Bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full md:max-w-[480px] border-t border-border bg-card/95 backdrop-blur">
-        <div className="grid grid-cols-4">
-          {bottomNav.map((item) => {
-            const active = screen === item.key
-            return (
-              <button
-                key={item.key}
-                onClick={() => navigate(item.key)}
-                className="relative flex flex-col items-center gap-1 py-2.5"
-                aria-current={active ? "page" : undefined}
-              >
-                <span
-                  className={cn(
-                    "grid size-10 place-items-center rounded-2xl transition",
-                    active ? "bg-gradient-to-r from-[#FF8C00] to-[#FFA726] text-white shadow-md" : "text-muted-foreground",
-                  )}
-                >
-                  <Icon name={item.icon} className="size-5" />
-                </span>
-                <span
-                  className={cn(
-                    "text-[11px] font-semibold",
-                    active ? "text-[#FF8C00]" : "text-muted-foreground",
-                  )}
-                >
-                  {item.label}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+          )
+        })}
       </nav>
 
-      {/* Drawer */}
-      {drawerOpen ? (
-        <div className="fixed inset-0 z-50">
+      <div className="p-5 text-center shrink-0 border-t border-border">
+        <p className="text-xs font-heading tracking-widest text-muted-foreground">DIGITAL DARSHAN · V2.0</p>
+        <div className="mt-3 flex justify-center gap-2">
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="grid size-10 place-items-center rounded-full bg-card border border-border text-[#D97706] shadow-sm hover:bg-[#D97706]/10 transition"
+            title={soundEnabled ? "Mute Ambience" : "Enable Ambience"}
+          >
+            <Icon name={soundEnabled ? "Volume2" : "VolumeX"} className="size-4" />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="grid size-10 place-items-center rounded-full bg-card border border-border text-[#D97706] shadow-sm hover:bg-[#D97706]/10 transition"
+            title={isDark ? "Light Mode" : "Dark Mode"}
+          >
+            <Icon name={isDark ? "Sun" : "Moon"} className="size-4" />
+          </button>
+          <button
+            onClick={() => setBhatiMode(!bhatiMode)}
+            className={cn(
+              "grid size-10 place-items-center rounded-full border shadow-sm transition",
+              bhatiMode ? "bg-[#D97706] border-[#D97706] text-white" : "bg-card border-border text-[#D97706] hover:bg-[#D97706]/10",
+            )}
+            title="Bhakti Mode"
+          >
+            <Icon name="Sparkles" className="size-4" />
+          </button>
+          {currentUser && (
+            <button
+              onClick={handleLogout}
+              className="grid size-10 place-items-center rounded-full bg-card border border-red-200 text-red-500 shadow-sm hover:bg-red-50 transition"
+              title="Logout"
+            >
+              <Icon name="LogOut" className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  )
+
+  const showHeaderAndNav = !["welcome", "login", "signup", "otp"].includes(screen)
+
+  return (
+    <div className={cn("flex min-h-screen w-full transition-colors duration-700", isNightMode ? "bg-[#0e0805] text-[#FFF8F0]" : "bg-background text-foreground")}>
+      {bhatiMode && <BhatiMode />}
+
+      {/* Floating Animated Diyas for Night Darshan Mode */}
+      {isNightMode && showHeaderAndNav && (
+        <div className="pointer-events-none fixed bottom-20 right-6 z-40 flex gap-4">
+          <motion.div
+            animate={{ scale: [0.95, 1.05, 0.95] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="flex flex-col items-center"
+          >
+            <div className="w-7 h-4 bg-[#D4AF37] rounded-b-full relative border border-amber-600 shadow-lg">
+              <motion.div
+                animate={{ scaleY: [0.8, 1.25, 0.8], skewX: [-3, 3, -3] }}
+                transition={{ duration: 0.25, repeat: Infinity, repeatType: "reverse" }}
+                className="absolute -top-3.5 left-[11px] w-2 h-4 bg-gradient-to-t from-[#D97706] to-yellow-300 rounded-full origin-bottom blur-[0.5px]"
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar (lg+) */}
+      {showHeaderAndNav && (
+        <aside
+          className="hidden lg:flex lg:w-72 xl:w-80 shrink-0 flex-col border-r border-border bg-card shadow-lg"
+          style={{ position: "sticky", top: 0, height: "100vh" }}
+        >
+          <SidebarContent />
+        </aside>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Header */}
+        {showHeaderAndNav && (
+          <header
+            className="sticky top-0 z-30 shrink-0 overflow-hidden text-white shadow-md"
+            style={{ backgroundImage: "linear-gradient(135deg, #D97706 0%, #D4AF37 100%)" }}
+          >
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.12]"
+              style={{ backgroundImage: "url(/images/mandala-pattern.png)", backgroundSize: "250px" }}
+              aria-hidden="true"
+            />
+            <div className="relative flex h-16 items-center gap-3 px-4 md:px-6">
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="lg:hidden grid size-10 shrink-0 place-items-center rounded-xl bg-white/20 transition hover:bg-white/30 active:scale-95"
+                aria-label="Open navigation menu"
+                aria-expanded={drawerOpen}
+              >
+                <Icon name="Menu" className="size-5" />
+              </button>
+
+              {/* Logo with Night Mode Moon Halo */}
+              <span className="lg:hidden relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/50 bg-white p-0.5 shadow">
+                {isNightMode && (
+                  <div className="absolute inset-0 bg-yellow-200/40 rounded-full blur-[3px] animate-pulse" />
+                )}
+                <Image
+                  src="/images/khatu-shyam-logo.png"
+                  alt="Khatu Shyam Ji"
+                  width={32}
+                  height={32}
+                  className="size-full object-contain"
+                />
+              </span>
+
+              {/* Page title */}
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate font-heading text-base font-bold leading-tight drop-shadow-sm md:text-lg">
+                  {t(titles[screen].en, titles[screen].hi)}
+                </h1>
+                <p className="truncate text-[10px] uppercase tracking-wider text-white/80">
+                  {t(titles[screen].hi, titles[screen].en)}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {/* Language Toggle */}
+                <button
+                  onClick={() => setLang(lang === "en" ? "hi" : "en")}
+                  className="grid h-9 place-items-center rounded-xl bg-white/20 px-3 text-xs font-bold transition hover:bg-white/30 active:scale-95 font-heading"
+                  aria-label="Toggle language"
+                  title={lang === "en" ? "Switch to Hindi" : "Switch to English"}
+                >
+                  {lang === "en" ? "हिं" : "EN"}
+                </button>
+
+                {/* Dark/Light mode toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="grid size-9 md:size-10 shrink-0 place-items-center rounded-xl bg-white/20 transition hover:bg-white/30 active:scale-95"
+                  aria-label={isDark ? "Switch to Light mode" : "Switch to Dark mode"}
+                  title={isDark ? "Light Mode" : "Dark Mode"}
+                >
+                  <Icon name={isDark ? "Sun" : "Moon"} className="size-4 text-white" />
+                </button>
+
+                {/* Notifications Bell — notifications only */}
+                <button
+                  onClick={() => navigate("notifications")}
+                  className="relative grid size-9 md:size-10 shrink-0 place-items-center rounded-xl bg-white/20 transition hover:bg-white/30 active:scale-95"
+                  aria-label="Notifications"
+                  title="Notifications"
+                >
+                  <Icon name="Bell" className="size-5 text-white" />
+                  {notifCount > 0 && (
+                    <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-[#D97706]">
+                      {notifCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* AI Assistant button — separate from notifications */}
+                <button
+                  onClick={() => navigate("shyam-ai")}
+                  className="relative grid size-9 md:size-10 shrink-0 place-items-center rounded-xl bg-white/20 transition hover:bg-white/30 active:scale-95"
+                  aria-label="Shyam Sahayak AI Assistant"
+                  title="Shyam Sahayak AI"
+                >
+                  <Icon name="Bot" className="size-5 text-white" />
+                  <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-green-400 ring-2 ring-[#D97706] animate-pulse" />
+                </button>
+              </div>
+            </div>
+
+            {isHome && (
+              <div className="relative pb-2.5 text-center lg:hidden">
+                <p className="font-heading text-sm font-bold tracking-[0.25em] text-white/90 drop-shadow">
+                  जय श्री श्याम
+                </p>
+              </div>
+            )}
+          </header>
+        )}
+
+        {/* Page Content */}
+        <main className={cn("flex-1 w-full max-w-5xl mx-auto px-4 md:px-8", showHeaderAndNav ? "pt-5 pb-24 lg:pb-10" : "")}>
+          {screen === "welcome" && <WelcomeScreen navigate={navigate} />}
+          {screen === "login" && <LoginScreen navigate={navigate} />}
+          {screen === "signup" && (
+            <SignupScreen
+              navigate={navigate}
+              onSignupSuccess={(u) => {
+                setCurrentUser(u)
+                localStorage.setItem("current_user", JSON.stringify(u))
+              }}
+            />
+          )}
+          {screen === "otp" && (
+            <OtpScreen
+              navigate={navigate}
+              onLoginSuccess={(u) => {
+                setCurrentUser(u)
+                localStorage.setItem("current_user", JSON.stringify(u))
+              }}
+            />
+          )}
+          {screen === "booking-success" && <BookingSuccessScreen navigate={navigate} />}
+          {screen === "virtual-darshan" && <VirtualDarshanScreen navigate={navigate} />}
+          {screen === "live-darshan" && <LiveDarshanScreen navigate={navigate} />}
+          {screen === "help-support" && <HelpSupportScreen navigate={navigate} />}
+          {screen === "home" && <HomeScreen navigate={navigate} />}
+          {screen === "book" && <BookDarshanScreen navigate={navigate} navigateWithDate={navigateWithDate} />}
+          {screen === "passenger-details" && <PassengerDetailsScreen navigate={navigate} bookingDate={bookingDate} />}
+          {screen === "group-booking" && <GroupBookingScreen navigate={navigate} />}
+          {screen === "services" && <ServicesScreen navigate={navigate} />}
+          {screen === "bookings" && <MyBookingsScreen navigate={navigate} />}
+          {screen === "qr" && <QrPassScreen />}
+          {screen === "reach" && <HowToReachScreen />}
+          {screen === "profile" && (
+            <ProfileScreen
+              navigate={navigate}
+              currentUser={currentUser}
+              onLogout={handleLogout}
+            />
+          )}
+          {screen === "shyam-ai" && <ShyamSahayakScreen navigate={navigate} />}
+          {["khatu-path", "crowd", "traffic", "parking", "lost-found", "offline", "temple", "emergency", "notifications", "announcements"].includes(screen) && (
+            <InfoScreens screen={screen as any} navigate={navigate} />
+          )}
+        </main>
+      </div>
+
+      {/* Mobile Bottom nav */}
+      {showHeaderAndNav && (
+        <nav className="lg:hidden fixed inset-x-0 bottom-0 z-30 w-full border-t border-border bg-card/95 backdrop-blur-md pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+          <div className="grid grid-cols-5 h-16">
+            {bottomNav.map((item) => {
+              const active = screen === item.key
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => {
+                    if (item.key === "profile") {
+                      handleProfileClick()
+                    } else {
+                      navigate(item.key)
+                    }
+                  }}
+                  className="relative flex flex-col items-center justify-center gap-1 h-full transition-transform active:scale-95"
+                  aria-current={active ? "page" : undefined}
+                >
+                  {active && (
+                    <span className="absolute -top-1 w-8 h-1 bg-[#D97706] rounded-b-full" />
+                  )}
+                  <span
+                    className={cn(
+                      "grid size-8 place-items-center rounded-full transition-all duration-300",
+                      active ? "bg-gradient-to-r from-[#D97706] to-[#D4AF37] text-white shadow-lg -translate-y-1" : "text-muted-foreground",
+                    )}
+                  >
+                    <Icon name={item.icon} className="size-[18px]" />
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold transition-colors duration-300",
+                      active ? "text-[#D97706]" : "text-muted-foreground",
+                    )}
+                  >
+                    {t(item.label.en, item.label.hi)}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+      )}
+
+      {/* Mobile Drawer */}
+      {drawerOpen && showHeaderAndNav && (
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/50 animate-in fade-in"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <aside className="absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col overflow-y-auto bg-background shadow-2xl duration-200 animate-in slide-in-from-left">
-            {/* Drawer header */}
-            <div
-              className="relative overflow-hidden px-5 pb-6 pt-6 text-white"
-              style={{
-                backgroundImage:
-                  "linear-gradient(135deg, #FF8C00 0%, #FFA726 60%, #FFB74D 100%)",
-              }}
-            >
-              <div
-                className="absolute inset-0 opacity-[0.10]"
-                style={{ backgroundImage: "url(/images/mandala-pattern.png)", backgroundSize: "220px" }}
-                aria-hidden="true"
-              />
-              <div className="relative flex items-center justify-between">
-                <span className="grid size-11 place-items-center rounded-full bg-white shadow-md overflow-hidden">
-                  <Image
-                    src="/images/khatu-shyam-logo.png"
-                    alt="Khatu Shyam Ji Logo"
-                    width={40}
-                    height={40}
-                    className="size-[40px] object-contain"
-                  />
-                </span>
-                <button
-                  onClick={() => setDrawerOpen(false)}
-                  className="grid size-9 place-items-center rounded-xl bg-white/20"
-                  aria-label="Close menu"
-                >
-                  <Icon name="X" className="size-5" />
-                </button>
-              </div>
-              <p className="relative mt-4 font-heading text-sm font-semibold text-white/90">
-                जय श्री श्याम · Khatu Dham
-              </p>
-
-              {/* Profile card */}
-              <div className="relative mt-3 flex items-center gap-3 rounded-2xl bg-white/15 p-3">
-                <span className="grid size-12 place-items-center rounded-full bg-white font-heading text-lg font-bold text-[#FF8C00]">
-                  {user.initials}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate font-heading font-semibold">{user.name}</p>
-                  <p className="truncate text-xs text-white/80">{user.phone}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Drawer items */}
-            <nav className="flex-1 px-3 py-3">
-              {drawerItems.map((item) => {
-                const active = screen === item.key
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => navigate(item.key)}
-                    className={cn(
-                      "mb-1 flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition",
-                      active ? "bg-[#FFF3E0] text-[#FF8C00]" : "text-foreground hover:bg-secondary",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "grid size-9 place-items-center rounded-xl",
-                        active ? "bg-gradient-to-r from-[#FF8C00] to-[#FFA726] text-white" : "bg-secondary text-[#FF8C00]",
-                      )}
-                    >
-                      <Icon name={item.icon} className="size-5" />
-                    </span>
-                    <span className="flex-1">
-                      <span className="block text-sm font-semibold leading-tight">{item.label}</span>
-                      <span className="block text-xs text-muted-foreground">{item.hindi}</span>
-                    </span>
-                    <Icon name="ChevronRight" className="size-4 text-muted-foreground" />
-                  </button>
-                )
-              })}
-            </nav>
-
-            <div className="px-5 pb-6 pt-2 text-center text-xs text-muted-foreground">
-              Smart Darshan · v1.0
-            </div>
+          <aside className="absolute left-0 top-0 flex h-full w-[82%] max-w-sm flex-col overflow-y-auto bg-background shadow-2xl duration-300 animate-in slide-in-from-left">
+            <SidebarContent />
           </aside>
         </div>
-      ) : null}
+      )}
     </div>
   )
 }
