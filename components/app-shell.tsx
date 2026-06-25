@@ -13,6 +13,12 @@ import { BookDarshanScreen } from "@/components/screens/book-darshan"
 import { PassengerDetailsScreen } from "@/components/screens/passenger-details"
 import { GroupBookingScreen } from "@/components/screens/group-booking"
 import { ServicesScreen } from "@/components/screens/services"
+import { HotelBookingScreen } from "@/components/screens/services/hotel-booking"
+import { TransportScreen } from "@/components/screens/services/transport"
+import { RestaurantScreen } from "@/components/screens/services/restaurant"
+import { ShyamBusScreen } from "@/components/screens/services/shyam-bus"
+import { PrashadScreen } from "@/components/screens/services/prashad"
+import { DonationScreen } from "@/components/screens/services/donation"
 import { SevaBookingScreen } from "@/components/screens/services/seva-booking"
 import { OfferingsScreen } from "@/components/screens/services/offerings"
 import { EmergencyHelplineScreen } from "@/components/screens/services/emergency-helpline"
@@ -71,6 +77,14 @@ const titles: Record<ScreenKey, { en: string; hi: string }> = {
   "live-darshan": { en: "Live Darshan", hi: "लाइव दर्शन" },
   "virtual-darshan": { en: "Virtual Darshan", hi: "आभासी दर्शन" },
   "help-support": { en: "Help & Support", hi: "सहायता केंद्र" },
+  "hotel-booking": { en: "Hotel Booking", hi: "होटल बुकिंग" },
+  transport: { en: "Transport", hi: "परिवहन" },
+  restaurant: { en: "Restaurant", hi: "भोजनालय" },
+  "shyam-bus": { en: "Shyam Bus", hi: "श्याम बस" },
+  prashad: { en: "Prashad", hi: "प्रसाद" },
+  donation: { en: "Donation", hi: "दान" },
+  "seva-booking": { en: "Seva Booking", hi: "सेवा बुकिंग" },
+  offerings: { en: "Offerings", hi: "भेंट" },
 }
 
 const bottomNav: { key: ScreenKey; label: { en: string; hi: string }; icon: string }[] = [
@@ -492,10 +506,17 @@ export function AppShell() {
           {screen === "passenger-details" && <PassengerDetailsScreen navigate={navigate} bookingDate={bookingDate} />}
           {screen === "group-booking" && <GroupBookingScreen navigate={navigate} />}
           {screen === "services" && <ServicesScreen navigate={navigate} />}
-{screen === "offerings" && <OfferingsScreen navigate={navigate} />}
-{screen === "emergency" && <EmergencyHelplineScreen navigate={navigate} />}
-{screen === "parking" && <ParkingInfoScreen navigate={navigate} />}
-{screen === "traffic" && <TrafficUpdatesScreen navigate={navigate} />}
+          {screen === "hotel-booking" && <HotelBookingScreen navigate={navigate} />}
+          {screen === "transport" && <TransportScreen navigate={navigate} />}
+          {screen === "restaurant" && <RestaurantScreen navigate={navigate} />}
+          {screen === "shyam-bus" && <ShyamBusScreen navigate={navigate} />}
+          {screen === "prashad" && <PrashadScreen navigate={navigate} />}
+          {screen === "donation" && <DonationScreen navigate={navigate} />}
+          {screen === "seva-booking" && <SevaBookingScreen navigate={navigate} />}
+          {screen === "offerings" && <OfferingsScreen navigate={navigate} />}
+          {screen === "emergency" && <EmergencyHelplineScreen navigate={navigate} />}
+          {screen === "parking" && <ParkingInfoScreen navigate={navigate} />}
+          {screen === "traffic" && <TrafficUpdatesScreen navigate={navigate} />}
           {screen === "bookings" && <MyBookingsScreen navigate={navigate} />}
           {screen === "qr" && <QrPassScreen />}
           {screen === "reach" && <HowToReachScreen />}
@@ -507,7 +528,7 @@ export function AppShell() {
             />
           )}
           {screen === "shyam-ai" && <ShyamSahayakScreen navigate={navigate} />}
-          {["khatu-path", "crowd", "traffic", "parking", "lost-found", "offline", "temple", "emergency", "notifications", "announcements"].includes(screen) && (
+          {["khatu-path", "crowd", "lost-found", "offline", "temple", "notifications", "announcements"].includes(screen) && (
             <InfoScreens screen={screen as any} navigate={navigate} />
           )}
         </main>

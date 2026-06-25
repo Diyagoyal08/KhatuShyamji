@@ -1,43 +1,85 @@
-"use client";
+﻿"use client"
+import { useState } from "react"
+import { Icon } from "@/components/shared"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
+import type { ScreenKey } from "@/lib/data"
 
-import { Icon } from "@/components/shared";
-import { useLanguage } from "@/lib/contexts/LanguageContext";
+const items = [
+  { id: 1, name: "Flower Garland", desc: "Fresh marigold garland for the deity", price: 50, icon: "Flower" },
+  { id: 2, name: "Coconut", desc: "Sacred coconut for offering", price: 30, icon: "Circle" },
+  { id: 3, name: "Incense Pack", desc: "Premium incense sticks (20 pcs)", price: 40, icon: "Wind" },
+  { id: 4, name: "Chunri (Red)", desc: "Auspicious red cloth offering", price: 150, icon: "Shirt" },
+  { id: 5, name: "Diyas (5 pcs)", desc: "Clay lamps for evening aarti", price: 25, icon: "Sun" },
+  { id: 6, name: "Puja Thali", desc: "Complete thali with all essentials", price: 200, icon: "LayoutGrid" },
+]
 
-export function OfferingsScreen({ navigate }: { navigate?: (s: string) => void }) {
-  const { t } = useLanguage();
+export function OfferingsScreen({ navigate }: { navigate?: (s: ScreenKey) => void }) {
+  const { t } = useLanguage()
+  const [cart, setCart] = useState<number[]>([])
+  const [ordered, setOrdered] = useState(false)
 
-  const offerings = [
-    { name: "Flowers", hindi: "फूल", desc: "Fresh marigold and roses for puja", icon: "Flower" },
-    { name: "Coconut", hindi: "नारियल", desc: "Traditionally broken for rituals", icon: "Coconut" },
-    { name: "Incense Sticks", hindi: "धूप", desc: "Fragrant incense for worship", icon: "Fire" },
-  ];
+  const total = cart.reduce((sum, id) => sum + (items.find((i) => i.id === id)?.price ?? 0), 0)
+
+  function toggle(id: number) {
+    setCart((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+  }
+
+  function placeOrder() {
+    setCart([])
+    setOrdered(true)
+    setTimeout(() => setOrdered(false), 3000)
+  }
 
   return (
-    <div className="space-y-6 pb-8">
-      <header className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-bold text-foreground">
-          {t("Offerings", "भेंट")}
-        </h1>
-        <span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-          <Icon name="Gift" className="size-6" />
-        </span>
+    <div className="space-y-6 pb-10">
+      <header>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Khatu Dham</p>
+        <h1 className="font-heading text-2xl font-bold text-foreground mt-1">{t("Offerings", "Offerings")}</h1>
+        <p className="text-xs text-muted-foreground mt-1">{t("Select items to offer at the temple counter", "Select items to offer at the temple counter")}</p>
       </header>
-      <ul className="grid gap-4 md:grid-cols-2">
-        {offerings.map((o, i) => (
-          <li key={i} className="flex items-center gap-4 rounded-3xl border border-border bg-card p-4">
-            <span className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
-              <Icon name={o.icon as any} className="size-6" />
-            </span>
-            <div className="flex-1">
-              <p className="font-heading font-bold text-foreground">{t(o.name, o.hindi)}</p>
-              <p className="text-xs text-muted-foreground">{t(o.desc, o.desc)}</p>
-            </div>
-            <button className="rounded-xl bg-gradient-to-r from-primary to-secondary px-3 py-1 text-xs font-bold text-white shadow hover:shadow-md">
-              {t("Add", "जोड़ें")}
+      {ordered && (
+        <div className="flex items-center gap-3 rounded-2xl bg-green-500/10 border border-green-500/30 p-4">
+          <Icon name="CheckCircle" className="size-5 text-green-600 shrink-0" />
+          <p className="text-sm font-semibold text-green-700">{t("Order placed! Collect from Counter 2.", "Order placed! Collect from Counter 2.")}</p>
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {items.map((item) => {
+          const inCart = cart.includes(item.id)
+          return (
+            <button
+              key={item.id}
+              onClick={() => toggle(item.id)}
+              className={"rounded-2xl border p-4 text-left transition-all duration-200 " + (inCart ? "border-primary bg-primary/10 shadow-md" : "border-border bg-card hover:border-primary/40 hover:shadow-sm")}
+            >
+              <div className="flex items-center gap-3">
+                <span className={"grid size-10 shrink-0 place-items-center rounded-xl " + (inCart ? "bg-primary text-white" : "bg-primary/10 text-primary")}>
+                  <Icon name={item.icon} className="size-5" />
+                </span>
+                <div className="flex-1">
+                  <p className="font-heading text-sm font-bold text-foreground">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                </div>
+                <p className="font-bold text-primary text-sm">Rs.{item.price}</p>
+              </div>
             </button>
-          </li>
-        ))}
-      </ul>
+          )
+        })}
+      </div>
+      {cart.length > 0 && (
+        <div className="rounded-3xl border border-primary/20 bg-card p-5 shadow-sm space-y-3">
+          <div className="flex justify-between text-sm font-bold text-foreground">
+            <span>{cart.length} item{cart.length > 1 ? "s" : ""} selected</span>
+            <span className="text-primary">Total: Rs.{total}</span>
+          </div>
+          <button
+            onClick={placeOrder}
+            className="w-full rounded-2xl bg-gradient-to-r from-primary to-[#D4AF37] py-3.5 text-sm font-bold text-white shadow-md transition hover:opacity-90 active:scale-95"
+          >
+            {t("Place Order", "Place Order")}
+          </button>
+        </div>
+      )}
     </div>
-  );
+  )
 }

@@ -1,38 +1,46 @@
-"use client"
-import { Icon } from '@/components/shared'
-import { useLanguage } from '@/lib/contexts/LanguageContext'
+﻿"use client"
+import { Icon } from "@/components/shared"
+import { useLanguage } from "@/lib/contexts/LanguageContext"
+import type { ScreenKey } from "@/lib/data"
 
-export function EmergencyHelplineScreen({ navigate }: { navigate?: (s: string) => void }) {
+const helplines = [
+  { name: "Medical Emergency", number: "108", icon: "HeartPulse", color: "text-red-500", bg: "bg-red-50 border-red-100" },
+  { name: "Police Helpline", number: "100", icon: "Shield", color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
+  { name: "Fire Station", number: "101", icon: "Flame", color: "text-orange-500", bg: "bg-orange-50 border-orange-100" },
+  { name: "Temple Security", number: "9887654321", icon: "ShieldCheck", color: "text-green-600", bg: "bg-green-50 border-green-100" },
+  { name: "Lost & Found Desk", number: "01572-280555", icon: "PackageSearch", color: "text-purple-600", bg: "bg-purple-50 border-purple-100" },
+  { name: "District Ambulance", number: "112", icon: "Truck", color: "text-rose-600", bg: "bg-rose-50 border-rose-100" },
+]
+
+export function EmergencyHelplineScreen({ navigate }: { navigate?: (s: ScreenKey) => void }) {
   const { t } = useLanguage()
-  const helplines = [
-    { name: 'Medical', number: '108', icon: 'HeartPulse' },
-    { name: 'Police', number: '100', icon: 'Siren' },
-    { name: 'Fire', number: '101', icon: 'Fire' },
-  ]
   return (
-    <div className='space-y-6 pb-8'>
-      <header className='flex items-center justify-between'>
-        <h1 className='font-heading text-2xl font-bold text-foreground'>{t('Emergency Helpline', 'आपातकालीन हेल्पलाइन')}</h1>
-        <span className='grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary'>
-          <Icon name='Siren' className='size-6' />
-        </span>
+    <div className="space-y-6 pb-10">
+      <header>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Khatu Dham</p>
+        <h1 className="font-heading text-2xl font-bold text-foreground mt-1">{t("Emergency Helpline", "Emergency Helpline")}</h1>
+        <p className="text-xs text-muted-foreground mt-1">{t("24/7 medical & police assistance", "24/7 medical & police assistance")}</p>
       </header>
-      <ul className='grid gap-4 md:grid-cols-2'>
-        {helplines.map((h, i) => (
-          <li key={i} className='flex items-center gap-4 rounded-3xl border border-border bg-card p-4'>
-            <span className='grid size-10 place-items-center rounded-lg bg-primary/10 text-primary'>
-              <Icon name={h.icon as any} className='size-6' />
+      <div className="flex items-start gap-3 rounded-2xl bg-red-500/10 border border-red-500/20 p-4">
+        <Icon name="AlertTriangle" className="size-5 shrink-0 text-red-600 mt-0.5" />
+        <p className="text-xs text-red-800 font-semibold leading-relaxed">
+          {t("In a life-threatening emergency, call 112 immediately.", "In a life-threatening emergency, call 112 immediately.")}
+        </p>
+      </div>
+      <div className="space-y-3">
+        {helplines.map((h) => (
+          <a key={h.number} href={"tel:" + h.number} className={"flex items-center gap-4 rounded-2xl border p-4 transition hover:shadow-md active:scale-[0.98] " + h.bg}>
+            <span className={"grid size-11 shrink-0 place-items-center rounded-xl bg-white/80 shadow-inner " + h.color}>
+              <Icon name={h.icon} className="size-5" />
             </span>
-            <div className='flex-1'>
-              <p className='font-heading font-bold text-foreground'>{t(h.name, h.name)}</p>
-              <p className='text-xs text-muted-foreground'>{h.number}</p>
+            <div className="flex-1">
+              <p className="font-heading text-sm font-bold text-foreground">{h.name}</p>
+              <p className="text-xs text-muted-foreground">{h.number}</p>
             </div>
-            <a href={`tel:${h.number}`} className='rounded-xl bg-gradient-to-r from-primary to-secondary px-3 py-1 text-xs font-bold text-white shadow hover:shadow-md'>
-              {t('Call', 'कॉल')}
-            </a>
-          </li>
+            <Icon name="Phone" className={"size-5 shrink-0 " + h.color} />
+          </a>
         ))}
-      </ul>
+      </div>
     </div>
   )
 }
