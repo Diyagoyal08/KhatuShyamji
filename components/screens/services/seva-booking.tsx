@@ -117,7 +117,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
   const [reason, setReason] = useState("")
   const [emergencyContact, setEmergencyContact] = useState("")
 
-  // Error State
+  // Submission & Validation States
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validate = () => {
@@ -153,32 +155,65 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
     if (!reason.trim()) newErrors.reason = lang === "hi" ? "स्वयंसेवा का कारण आवश्यक है" : "Reason for volunteering is required"
 
     setErrors(newErrors)
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstErrorField = Object.keys(newErrors)[0]
+      setTimeout(() => {
+        const el = document.getElementById(firstErrorField)
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" })
+          el.focus()
+        }
+      }, 50)
+    }
+
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError(null)
+    
     if (validate()) {
-      setSuccess(true)
-      // Clear form
-      setFullName("")
-      setEmail("")
-      setMobile("")
-      setAge("")
-      setGender("")
-      setCity("")
-      setPreferredRole("")
-      setPreferredDate("")
-      setPreferredTimeSlot("")
-      setExperience("")
-      setReason("")
-      setEmergencyContact("")
-      
-      // Close modal after success animation
-      setTimeout(() => {
-        setSuccess(false)
-        setShowModal(false)
-      }, 3000)
+      setIsSubmitting(true)
+      try {
+        // Simulate API call to register volunteer
+        await new Promise((resolve, reject) => {
+          setTimeout(() => {
+            // 5% chance of mock API failure for demonstration purposes
+            if (Math.random() < 0.05) {
+              reject(new Error(lang === "hi" ? "सर्वर कनेक्शन विफल रहा। कृपया दोबारा प्रयास करें।" : "Server connection failed. Please try again."))
+            } else {
+              resolve(true)
+            }
+          }, 1500)
+        })
+
+        setSuccess(true)
+        // Clear all form values
+        setFullName("")
+        setEmail("")
+        setMobile("")
+        setAge("")
+        setGender("")
+        setCity("")
+        setPreferredRole("")
+        setPreferredDate("")
+        setPreferredTimeSlot("")
+        setExperience("")
+        setReason("")
+        setEmergencyContact("")
+        
+        // Auto-close modal after success message duration
+        setTimeout(() => {
+          setSuccess(false)
+          setShowModal(false)
+        }, 3000)
+      } catch (err: any) {
+        setSubmitError(err.message || (lang === "hi" ? "पंजीकरण विफल रहा।" : "Registration failed."))
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -339,18 +374,25 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                 </p>
               </div>
 
+              {submitError && (
+                <div className="flex items-center gap-3 rounded-2xl bg-red-500/10 border border-red-500/30 p-4">
+                  <Icon name="AlertCircle" className="size-5 text-red-600 shrink-0" />
+                  <p className="text-xs font-semibold text-red-700">{submitError}</p>
+                </div>
+              )}
+
               {success ? (
                 <div className="flex flex-col items-center justify-center py-10 space-y-3">
                   <div className="grid size-16 place-items-center rounded-full bg-green-500/10 text-green-600 border border-green-500/30">
                     <Icon name="CheckCircle" className="size-8" />
                   </div>
-                  <h4 className="font-heading text-base font-bold text-green-700">
-                    {lang === "hi" ? "सफलतापूर्वक पंजीकृत!" : "Successfully Registered!"}
+                  <h4 className="font-heading text-base font-bold text-green-700 text-center">
+                    {lang === "hi" ? "पंजीकरण सफलतापूर्वक जमा हुआ" : "Successfully Registered"}
                   </h4>
-                  <p className="text-xs text-center text-muted-foreground max-w-xs">
+                  <p className="text-xs text-center text-muted-foreground max-w-xs leading-relaxed">
                     {lang === "hi"
-                      ? "पंजीकरण विवरण प्राप्त हो गया है। मंदिर प्रशासन आपसे जल्द ही संपर्क करेगा।"
-                      : "We have received your application. The temple administration will contact you shortly."}
+                      ? "स्वयंसेवक के रूप में पंजीकरण करने के लिए धन्यवाद। आपका आवेदन सफलतापूर्वक जमा कर दिया गया है।"
+                      : "Thank you for registering as a volunteer. Your application has been submitted successfully."}
                   </p>
                 </div>
               ) : (
@@ -361,6 +403,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                       {lang === "hi" ? "पूरा नाम" : "Full Name"} *
                     </label>
                     <input
+                      id="fullName"
+                      name="fullName"
+                      disabled={isSubmitting}
                       type="text"
                       placeholder={lang === "hi" ? "अपना पूरा नाम दर्ज करें" : "Enter your full name"}
                       value={fullName}
@@ -377,6 +422,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                         {lang === "hi" ? "ईमेल पता" : "Email Address"} *
                       </label>
                       <input
+                        id="email"
+                        name="email"
+                        disabled={isSubmitting}
                         type="email"
                         placeholder="example@mail.com"
                         value={email}
@@ -391,6 +439,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                         {lang === "hi" ? "मोबाइल नंबर" : "Mobile Number"} *
                       </label>
                       <input
+                        id="mobile"
+                        name="mobile"
+                        disabled={isSubmitting}
                         type="tel"
                         maxLength={10}
                         placeholder="9876543210"
@@ -409,6 +460,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                         {lang === "hi" ? "आयु" : "Age"} *
                       </label>
                       <input
+                        id="age"
+                        name="age"
+                        disabled={isSubmitting}
                         type="number"
                         placeholder="e.g. 25"
                         value={age}
@@ -423,6 +477,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                         {lang === "hi" ? "लिंग" : "Gender"} *
                       </label>
                       <select
+                        id="gender"
+                        name="gender"
+                        disabled={isSubmitting}
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
                         className={errors.gender ? "!border-red-400" : ""}
@@ -442,6 +499,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                       {lang === "hi" ? "शहर / निवास स्थान" : "City / Hometown"} *
                     </label>
                     <input
+                      id="city"
+                      name="city"
+                      disabled={isSubmitting}
                       type="text"
                       placeholder={lang === "hi" ? "अपने शहर का नाम लिखें" : "Enter your city"}
                       value={city}
@@ -457,6 +517,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                       {lang === "hi" ? "पसंदीदा स्वयंसेवा भूमिका" : "Preferred Volunteer Role"} *
                     </label>
                     <select
+                      id="preferredRole"
+                      name="preferredRole"
+                      disabled={isSubmitting}
                       value={preferredRole}
                       onChange={(e) => setPreferredRole(e.target.value)}
                       className={errors.preferredRole ? "!border-red-400" : ""}
@@ -480,6 +543,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                         {lang === "hi" ? "पसंदीदा तारीख" : "Preferred Date"} *
                       </label>
                       <input
+                        id="preferredDate"
+                        name="preferredDate"
+                        disabled={isSubmitting}
                         type="date"
                         value={preferredDate}
                         onChange={(e) => setPreferredDate(e.target.value)}
@@ -493,6 +559,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                         {lang === "hi" ? "समय स्लॉट" : "Preferred Time Slot"} *
                       </label>
                       <select
+                        id="preferredTimeSlot"
+                        name="preferredTimeSlot"
+                        disabled={isSubmitting}
                         value={preferredTimeSlot}
                         onChange={(e) => setPreferredTimeSlot(e.target.value)}
                         className={errors.preferredTimeSlot ? "!border-red-400" : ""}
@@ -512,6 +581,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                       {lang === "hi" ? "पिछला स्वयंसेवा अनुभव (वैकल्पिक)" : "Previous Volunteer Experience (Optional)"}
                     </label>
                     <input
+                      id="experience"
+                      name="experience"
+                      disabled={isSubmitting}
                       type="text"
                       placeholder={lang === "hi" ? "पूर्व अनुभव विवरण दर्ज करें" : "Enter previous experience details"}
                       value={experience}
@@ -525,6 +597,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                       {lang === "hi" ? "स्वयंसेवा करने का कारण" : "Reason for Volunteering"} *
                     </label>
                     <textarea
+                      id="reason"
+                      name="reason"
+                      disabled={isSubmitting}
                       rows={3}
                       placeholder={lang === "hi" ? "आप स्वयंसेवा क्यों करना चाहते हैं?" : "Why do you want to volunteer?"}
                       value={reason}
@@ -540,6 +615,9 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                       {lang === "hi" ? "आपातकालीन संपर्क नंबर (वैकल्पिक)" : "Emergency Contact Number (Optional)"}
                     </label>
                     <input
+                      id="emergencyContact"
+                      name="emergencyContact"
+                      disabled={isSubmitting}
                       type="tel"
                       maxLength={10}
                       placeholder="9876543210"
@@ -552,9 +630,17 @@ export function SevaBookingScreen({ navigate }: { navigate: (s: ScreenKey) => vo
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="w-full rounded-2xl bg-gradient-to-r from-[#800000] to-[#a02020] py-3.5 text-sm font-bold text-white shadow-md transition hover:opacity-90 active:scale-95"
+                      disabled={isSubmitting}
+                      className="w-full rounded-2xl bg-gradient-to-r from-[#800000] to-[#a02020] py-3.5 text-sm font-bold text-white shadow-md transition hover:opacity-90 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {lang === "hi" ? "पंजीकरण जमा करें" : "Submit Registration"}
+                      {isSubmitting ? (
+                        <>
+                          <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          {lang === "hi" ? "जमा किया जा रहा है..." : "Submitting..."}
+                        </>
+                      ) : (
+                        lang === "hi" ? "पंजीकरण जमा करें" : "Submit Registration"
+                      )}
                     </button>
                   </div>
                 </form>
