@@ -35,6 +35,7 @@ export type ScreenKey =
   | "donation"
   | "seva-booking"
   | "offerings"
+  | "aarti-timings"
 
 export type AppUser = {
   name: string
@@ -74,7 +75,7 @@ export const liveStatus = {
 
 export const services = [
   { key: "live-darshan", label: "Live Darshan", hindi: "लाइव दर्शन", icon: "Video", desc: "Real-time shrine feed", meta: "Live", screenKey: "live-darshan" as const },
-  { key: "aarti", label: "Aarti Timings", hindi: "आरती दर्शन", icon: "Flame", desc: "Daily aarti timings", meta: "Timings", screenKey: "home" as const },
+  { key: "aarti", label: "Aarti Timings", hindi: "आरती दर्शन", icon: "Flame", desc: "Daily aarti timings", meta: "Timings", screenKey: "aarti-timings" as const },
   { key: "temple", label: "Temple Guide", hindi: "मंदिर विवरण", icon: "Landmark", desc: "Temple information", meta: "Guide", screenKey: "temple" as const },
   { key: "hotel", label: "Hotel Booking", hindi: "होटल बुकिंग", icon: "BedDouble", desc: "Stays near Khatu Dham", meta: "120+ stays", screenKey: "hotel-booking" as const },
   { key: "transport", label: "Transport", hindi: "परिवहन", icon: "Bus", desc: "Buses, taxis & shared rides", meta: "Book now", screenKey: "transport" as const },

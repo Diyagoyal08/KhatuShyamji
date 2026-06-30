@@ -156,7 +156,9 @@ export function HomeScreen({ navigate, currentUser }: { navigate: (s: ScreenKey)
             <Icon name="Flame" className="size-5 text-[#FF8C00]" />
             <h2 className="font-heading text-base font-bold text-foreground">{t("home.aarti.title")}</h2>
           </div>
-          <span className="text-xs text-muted-foreground">{t("home.aarti.today")}</span>
+          <button onClick={() => navigate("aarti-timings")} className="text-xs font-semibold text-[#FF8C00]">
+            {t("home.popular.viewAll", "View All")}
+          </button>
         </div>
         <Ornament className="my-3" />
         <div className="grid grid-cols-2 gap-x-4 gap-y-3">

@@ -24,6 +24,7 @@ import { DonationScreen } from "@/components/screens/services/donation"
 import { SevaBookingScreen } from "@/components/screens/services/seva-booking"
 import { OfferingsScreen } from "@/components/screens/services/offerings"
 import { EmergencyHelplineScreen } from "@/components/screens/services/emergency-helpline"
+import { AartiTimingsScreen } from "@/components/screens/services/aarti-timings"
 import { ParkingInfoScreen } from "@/components/screens/services/parking-info"
 import { TrafficUpdatesScreen } from "@/components/screens/services/traffic-updates"
 import { MyBookingsScreen } from "@/components/screens/my-bookings"
@@ -88,6 +89,7 @@ const titles: Record<ScreenKey, { en: string; hi: string }> = {
   donation: { en: "Donation", hi: "दान" },
   "seva-booking": { en: "Seva Booking", hi: "सेवा बुकिंग" },
   offerings: { en: "Offerings", hi: "भेंट" },
+  "aarti-timings": { en: "Aarti Timings", hi: "आरती का समय" },
 }
 
 const bottomNav: { key: ScreenKey; icon: string }[] = [
@@ -562,6 +564,7 @@ export function AppShell() {
           {screen === "donation" && <DonationScreen navigate={navigate} />}
           {screen === "seva-booking" && <SevaBookingScreen navigate={navigate} />}
           {screen === "offerings" && <OfferingsScreen navigate={navigate} />}
+          {screen === "aarti-timings" && <AartiTimingsScreen />}
           {screen === "emergency" && <EmergencyHelplineScreen navigate={navigate} />}
           {screen === "parking" && <ParkingInfoScreen navigate={navigate} />}
           {screen === "traffic" && <TrafficUpdatesScreen navigate={navigate} />}

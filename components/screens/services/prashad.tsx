@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@/components/shared"
 import { useLanguage } from "@/lib/contexts/LanguageContext"
+import { useNavigation } from "@/lib/contexts/NavigationContext"
 import type { ScreenKey } from "@/lib/data"
 
 const prashadItems = [
@@ -44,6 +45,7 @@ const prashadItems = [
 
 export function PrashadScreen({ navigate }: { navigate: (s: ScreenKey) => void }) {
   const { t } = useLanguage()
+  const { goBack } = useNavigation()
   const [quantities, setQuantities] = useState<Record<number, number>>({ 1: 0, 2: 0, 3: 0 })
   const [deliveryType, setDeliveryType] = useState<"pickup" | "home">("pickup")
   const [checkout, setCheckout] = useHistoryState<boolean>("checkout", false)
