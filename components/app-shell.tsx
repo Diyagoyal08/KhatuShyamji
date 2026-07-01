@@ -209,7 +209,11 @@ export function AppShell() {
 
   const navigateWithDate = (s: ScreenKey, date: string) => {
     setBookingDate(date)
+    if (typeof window !== "undefined") {
+      window.history.pushState({ screen: s }, "", `?screen=${s}`)
+    }
     setScreen(s)
+    setInternalHistoryCount(c => c + 1)
     if (typeof window !== "undefined") window.scrollTo({ top: 0 })
   }
 
@@ -554,7 +558,7 @@ export function AppShell() {
           {screen === "home" && <HomeScreen navigate={navigate} currentUser={currentUser} />}
           {screen === "book" && <BookDarshanScreen navigate={navigate} navigateWithDate={navigateWithDate} />}
           {screen === "passenger-details" && <PassengerDetailsScreen navigate={navigate} bookingDate={bookingDate} />}
-          {screen === "group-booking" && <GroupBookingScreen navigate={navigate} />}
+          {screen === "group-booking" && <GroupBookingScreen navigate={navigate} bookingDate={bookingDate} />}
           {screen === "services" && <ServicesScreen navigate={navigate} />}
           {screen === "hotel-booking" && <HotelBookingScreen navigate={navigate} />}
           {screen === "transport" && <TransportScreen navigate={navigate} />}
